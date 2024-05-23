@@ -1,0 +1,81 @@
+version: '3'
+services:
+
+
+  ngnix.router:
+    image: nginx
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    ports:
+      - '81:81'
+    networks:
+      - mpv111
+    depends_on:
+      - api.node
+      - api.php
+      - db.mysql
+      - db.pma
+      - front.mpv111.administrator
+      - front.mpv111.public
+
+
+
+  front.mpv111.public:
+    container_name: front.mpv111.public
+    build: ./front/public
+    networks:
+    - mpv111
+
+
+  front.mpv111.administrator:
+    container_name: front.mpv111.administrator
+    build: ./front/admin
+    networks:
+      - mpv111
+
+
+
+  api.php:
+    build: backend/php_api
+    volumes:
+      - './backend/php_api/src:/app'
+    ports:
+      - "8000:8000"
+    networks:
+      - mpv111
+
+  api.node:
+    build: backend/nodejs_api
+    ports:
+      - "3000:3000"
+    networks:
+      - mpv111
+
+  db.mysql:
+   container_name: db.mysql
+   image: mysql
+   ports:
+     - "3306:3306"
+
+
+   env_file:
+     - .env
+   networks:
+     - mpv111
+
+
+  db.pma:
+    image: phpmyadmin
+    ports:
+      - "8080:80"
+    environment:
+      - PMA_ARBITRARY=1
+      - PMA_HOST=db.mysql
+    networks:
+      - mpv111
+
+
+networks:
+  mpv111:
+   driver: bridge
+
